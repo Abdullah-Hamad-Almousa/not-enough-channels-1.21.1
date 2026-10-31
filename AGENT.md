@@ -92,10 +92,24 @@ To test interactions in-game with target mods (like JEI, AE2, Sodium, Pipez, Fun
    - Wrap or extract complex builders into dedicated private helper functions or explicit `java.util.function.Supplier` instances.
 
 3. **Event Listeners:**
-   - Mod bus events: use `modEventBus.addListener(::commonSetup)`.
+   - Mod bus events: use `modEventBus.addListener(...)` in `@Mod` class constructors (inject `modEventBus: IEventBus` into the constructor).
+   - `@EventBusSubscriber(bus = Bus.MOD)` is deprecated in NeoForge 1.21.1 and marked for removal. `@EventBusSubscriber` is now reserved strictly for game events on `NeoForge.EVENT_BUS`.
    - Forge / Game events: use `@EventBusSubscriber` or `NeoForge.EVENT_BUS.register(this)`.
 
-4. **Preserving Documentation & User Directives:**
+4. **Asset Directory Hierarchy:**
+   - All mod assets (models, textures, blockstates, lang, sounds) MUST live strictly under `src/main/resources/assets/<modid>/` (e.g. `assets/notenoughchannels/models/item/channel_snowball.json`).
+   - Placing directories directly in `resources/` (e.g. `src/main/resources/models/`) causes Minecraft to fail asset discovery and renders items as missing texture cubes (black/magenta).
+
+5. **Item Color Tinting & ARGB Byte Order (Minecraft 1.21.1+):**
+   - Client item color handlers (`RegisterColorHandlersEvent.Item`) use **ARGB** format (`0xAARRGGBB`), **NOT** RGBA.
+   - Bits 24–31: **Alpha** (`0xFF` = 100% opaque solid, `0x00` = transparent / completely invisible).
+   - Bits 16–23: **Red**, Bits 8–15: **Green**, Bits 0–7: **Blue**.
+   - If Alpha is 0 (e.g., standard 6-digit RGB `0x38B6FF`), the item renders **completely invisible**.
+   - If Alpha is partial (e.g., `0x772121BB` where Alpha = `0x77`), the item renders **semi-transparent / glassy ("like a mirror")**.
+   - For 100% solid color, put `0xFF` at the start: `0xFF2121BB.toInt()` in Kotlin, or use `net.minecraft.util.FastColor.ARGB.opaque(0x2121BB)` or `FastColor.ARGB.color(255, r, g, b)`.
+   - When an item inherits from a vanilla model like `minecraft:item/snowball` (`minecraft:item/generated`), `layer0` quads have `tintindex = 0`. Thrown projectile entities (`SnowballItem` -> `Snowball`) render the item stack, so tint is automatically applied to both inventory items and thrown projectiles in flight.
+
+6. **Preserving Documentation & User Directives:**
    - Maintain comments and existing code structure.
    - The user prefers to make code changes directly with clear instructions or diffs when guided.
 
@@ -145,4 +159,7 @@ All commands should be executed from the project root (`A:\IDE\Intellija\not-eno
 - **`IllegalArgumentException: 25.0.4`:** Occurs if Gradle uses Java 25. Ensure `org.gradle.java.home` in `gradle.properties` points to JDK 21. Run `.\gradlew.bat --stop` to terminate any rogue daemons running on higher JDKs.
 - **`Module was compiled with an incompatible version of Kotlin`:** Occurs if the Kotlin Gradle plugin version is below `2.4.0`. KFF 5.12.0 bundles Kotlin 2.4.0 dependencies.
 - **`Argument type mismatch: actual type is 'Dist', but 'Array<Dist>' was expected`:** Caused by omitting brackets on `@Mod(dist = [Dist.CLIENT])`.
+- **`'enum class Bus : Enum<EventBusSubscriber.Bus!>' is deprecated`:** In NeoForge 1.21.1, the `bus` parameter on `@EventBusSubscriber` is deprecated and marked for removal. Migrate mod bus listeners to `modEventBus.addListener(...)` in constructor instead.
+- **Item Invisible or Glassy/Mirror-like when using `RegisterColorHandlersEvent`:** Minecraft 1.21+ interprets colors as ARGB (`0xAARRGGBB`). Alpha is the first byte: `0x00` makes items 100% invisible, and values like `0x77` make them translucent. Always prefix solid colors with `0xFF` (e.g. `0xFF2121BB.toInt()` or `FastColor.ARGB.opaque(...)`).
+- **`Caused by: java.net.SocketTimeoutException: Read timed out` during `runClient`:** Originates from `YggdrasilMinecraftSessionService` attempting to fetch skins for the offline dev profile `Dev` from Mojang servers. Completely harmless and can be safely ignored.
 - **Transitive Dependencies for Test Mods:** When dropping test mods like Functional Storage into `libs/`, ensure any required library mods (e.g. Titanium) are also in `libs/` to avoid runtime startup crashes.
