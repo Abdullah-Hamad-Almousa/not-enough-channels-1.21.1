@@ -1,7 +1,6 @@
 {
-  "itemGroup.notenoughchannels": "Example Mod Tab",
-  "block.notenoughchannels.example_block": "Example Block",
-  "item.notenoughchannels.example_item": "Example Item",
+  "itemGroup.notenoughchannels": "Not Enough Channels",
+  "item.notenoughchannels.channel_snowball": "Channel Snowball",
 
   "notenoughchannels.configuration.title": "not-enough-channels Configs",
   "notenoughchannels.configuration.section.notenoughchannels.common.toml": "not-enough-channels Configs",
