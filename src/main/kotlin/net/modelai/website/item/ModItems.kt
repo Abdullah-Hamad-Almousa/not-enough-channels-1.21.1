@@ -17,6 +17,9 @@ object ModItems {
     val CHANNEL_ROCK: DeferredItem<SnowballItem> =
         ITEMS.register("channel_rock", Supplier { SnowballItem(Item.Properties()) })
 
+    val CHANNEL_STICK: DeferredItem<Item> =
+        ITEMS.register("channel_stick", Supplier { Item(Item.Properties()) })
+
     fun register(bus: IEventBus) {
         ITEMS.register(bus)
     }
