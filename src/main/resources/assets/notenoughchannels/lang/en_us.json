@@ -1,0 +1,13 @@
+{
+  "itemGroup.notenoughchannels": "Example Mod Tab",
+  "block.notenoughchannels.example_block": "Example Block",
+  "item.notenoughchannels.example_item": "Example Item",
+
+  "notenoughchannels.configuration.title": "not-enough-channels Configs",
+  "notenoughchannels.configuration.section.notenoughchannels.common.toml": "not-enough-channels Configs",
+  "notenoughchannels.configuration.section.notenoughchannels.common.toml.title": "not-enough-channels Configs",
+  "notenoughchannels.configuration.items": "Item List",
+  "notenoughchannels.configuration.logDirtBlock": "Log Dirt Block",
+  "notenoughchannels.configuration.magicNumberIntroduction": "Magic Number Text",
+  "notenoughchannels.configuration.magicNumber": "Magic Number"
+}
