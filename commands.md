@@ -1,7 +1,6 @@
 This line to add the mods locally
-```powershell
-.\gradlew.bat runClient
-```
+run `.\gradlew.bat runClient`
+`gradlew .\gradlew.bat runClient`
 
 These have edit on them to make kotlin work
 

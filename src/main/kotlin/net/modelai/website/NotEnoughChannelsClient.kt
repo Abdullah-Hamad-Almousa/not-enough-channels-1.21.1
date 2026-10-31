@@ -9,6 +9,8 @@ import net.neoforged.fml.common.Mod
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent
 import net.neoforged.neoforge.client.gui.ConfigurationScreen
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory
+import net.minecraft.world.item.ItemStack
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = NotEnoughChannels.MODID, dist = [Dist.CLIENT])
@@ -30,6 +32,31 @@ class NotEnoughChannelsClient(container: ModContainer) {
             // Some client setup code
             NotEnoughChannels.LOGGER.info("HELLO FROM CLIENT SETUP")
             NotEnoughChannels.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().user.name)
+        }
+
+        @SubscribeEvent
+        @JvmStatic
+        fun registerItemColors(e: RegisterColorHandlersEvent.Item) {
+            e.register(
+                { _: ItemStack, tintIndex: Int ->
+                    if (tintIndex == 0) {
+                        0xFF2121BB.toInt()
+                    } else {
+                        -1
+                    }
+                },
+                NotEnoughChannels.CHANNEL_SNOWBALL.get()
+            )
+            e.register(
+                { _: ItemStack, tintIndex: Int ->
+                    if (tintIndex == 0) {
+                        0xFF949494.toInt()
+                    } else {
+                        -1
+                    }
+                },
+                NotEnoughChannels.CHANNEL_ROCK.get()
+            )
         }
     }
 }
