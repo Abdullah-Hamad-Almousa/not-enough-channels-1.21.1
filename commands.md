@@ -20,4 +20,13 @@ gradle.properties
 
 > org.gradle.java.home=C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot
 
-> 
+neoforge.mods.toml
+
+    This here to add dependencies for the mod to work
+
+> [[dependencies.${mod_id}]]
+modId="kotlinforforge"
+type="required"
+versionRange="[5.12.0,)"
+ordering="NONE"
+side="BOTH"
