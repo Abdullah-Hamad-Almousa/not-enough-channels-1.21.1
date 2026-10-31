@@ -37,6 +37,8 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
 
         val CHANNEL_SNOWBALL: DeferredItem<SnowballItem> =
             ITEMS.register("channel_snowball", Supplier { SnowballItem(Item.Properties()) })
+        val CHANNEL_ROCK: DeferredItem<SnowballItem> =
+            ITEMS.register("channel_rock", Supplier { SnowballItem(Item.Properties()) })
 
         private fun createModTab(): CreativeModeTab {
             return CreativeModeTab.builder()
@@ -45,6 +47,7 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
                 .icon(Supplier { ItemStack(CHANNEL_SNOWBALL.get()) })
                 .displayItems { _, output ->
                     output.accept(CHANNEL_SNOWBALL.get())
+                    output.accept(CHANNEL_ROCK.get())
                 }
                 .build()
         }

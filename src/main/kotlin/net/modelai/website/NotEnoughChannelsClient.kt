@@ -45,9 +45,17 @@ class NotEnoughChannelsClient(container: ModContainer) {
                         -1
                     }
                 },
-                NotEnoughChannels.CHANNEL_SNOWBALL.get(
-
-                )
+                NotEnoughChannels.CHANNEL_SNOWBALL.get()
+            )
+            e.register(
+                { _: ItemStack, tintIndex: Int ->
+                    if (tintIndex == 0) {
+                        0xFF949494.toInt()
+                    } else {
+                        -1
+                    }
+                },
+                NotEnoughChannels.CHANNEL_ROCK.get()
             )
         }
     }
