@@ -1,16 +1,17 @@
 package net.modelai.website
 
 import net.minecraft.client.Minecraft
+import net.modelai.website.client.registerColor
+import net.modelai.website.item.ModItems
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.SubscribeEvent
 import net.neoforged.fml.ModContainer
 import net.neoforged.fml.common.EventBusSubscriber
 import net.neoforged.fml.common.Mod
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent
 import net.neoforged.neoforge.client.gui.ConfigurationScreen
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory
-import net.minecraft.world.item.ItemStack
-import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = NotEnoughChannels.MODID, dist = [Dist.CLIENT])
@@ -37,26 +38,8 @@ class NotEnoughChannelsClient(container: ModContainer) {
         @SubscribeEvent
         @JvmStatic
         fun registerItemColors(e: RegisterColorHandlersEvent.Item) {
-            e.register(
-                { _: ItemStack, tintIndex: Int ->
-                    if (tintIndex == 0) {
-                        0xFF2121BB.toInt()
-                    } else {
-                        -1
-                    }
-                },
-                NotEnoughChannels.CHANNEL_SNOWBALL.get()
-            )
-            e.register(
-                { _: ItemStack, tintIndex: Int ->
-                    if (tintIndex == 0) {
-                        0xFF949494.toInt()
-                    } else {
-                        -1
-                    }
-                },
-                NotEnoughChannels.CHANNEL_ROCK.get()
-            )
+            e.registerColor(ModItems.CHANNEL_SNOWBALL, 0xFF2121BB)
+            e.registerColor(ModItems.CHANNEL_ROCK, 0xFF949494)
         }
     }
 }
