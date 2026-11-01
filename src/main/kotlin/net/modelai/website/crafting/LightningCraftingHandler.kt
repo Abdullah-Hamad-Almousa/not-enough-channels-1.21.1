@@ -15,57 +15,109 @@ import net.neoforged.neoforge.event.entity.EntityStruckByLightningEvent
 object LightningCraftingHandler {
 
     @SubscribeEvent
-    fun onEntityJoinLevel( event: EntityJoinLevelEvent ) {
+    fun onEntityJoinLevel(event: EntityJoinLevelEvent) {
         val level = event.level as? ServerLevel ?: return
         val lightning = event.entity as? LightningBolt ?: return
 
+        // Tier detection from lightning tags
         val tier = when {
             lightning.tags.contains("channel_tier_3") -> 3
             lightning.tags.contains("channel_tier_2") -> 2
-            else -> 1
+            else -> 1 // Tier 1 for "channel_tier_1" or natural lightning
         }
 
         val area = AABB.ofSize(lightning.position(), 6.0, 6.0, 6.0)
-        val items = level.getEntitiesOfClass(ItemEntity::class.java, area)
+        val itemEntities = level.getEntitiesOfClass(ItemEntity::class.java, area) { !it.isRemoved && !it.item.isEmpty }
+        if (itemEntities.isEmpty()) return
 
-        for (itemEntity in items) {
+        var craftedAny = false
 
-            val currentStack = itemEntity.item
-            val resultItem = LightningCrafting.getResult(currentStack.item, tier) ?: continue
+        for (recipe in LightningCrafting.getRecipesForTier(tier)) {
+            // Count available items in the area for this recipe
+            val available = mutableMapOf<net.minecraft.world.item.Item, Int>()
+            for (entity in itemEntities) {
+                if (entity.isRemoved || entity.item.isEmpty) continue
+                val item = entity.item.item
+                available[item] = (available[item] ?: 0) + entity.item.count
+            }
 
-            itemEntity.item = ItemStack(resultItem, currentStack.count)
+            // Calculate how many times this recipe can craft
+            var maxCrafts = Int.MAX_VALUE
+            for (input in recipe.inputs) {
+                val reqItem = input.item.get()
+                val count = available[reqItem] ?: 0
+                val possible = count / input.count
+                if (possible < maxCrafts) {
+                    maxCrafts = possible
+                }
+            }
 
+            if (maxCrafts <= 0) continue
+
+            // Consume required ingredients from item entities
+            for (input in recipe.inputs) {
+                val reqItem = input.item.get()
+                var remainingToDeduct = input.count * maxCrafts
+
+                for (entity in itemEntities) {
+                    if (remainingToDeduct <= 0) break
+                    if (entity.isRemoved || entity.item.isEmpty) continue
+                    if (entity.item.item != reqItem) continue
+
+                    val stack = entity.item
+                    if (stack.count <= remainingToDeduct) {
+                        remainingToDeduct -= stack.count
+                        entity.discard()
+                    } else {
+                        stack.shrink(remainingToDeduct)
+                        entity.item = stack
+                        remainingToDeduct = 0
+                    }
+                }
+            }
+
+            // Spawn output items
+            val strikePos = lightning.position()
+            for (output in recipe.outputs) {
+                val outItem = output.item.get()
+                var totalToSpawn = output.count * maxCrafts
+                val maxStack = outItem.defaultInstance.maxStackSize
+
+                while (totalToSpawn > 0) {
+                    val count = minOf(totalToSpawn, maxStack)
+                    totalToSpawn -= count
+                    val spawned = ItemEntity(level, strikePos.x, strikePos.y, strikePos.z, ItemStack(outItem, count))
+                    spawned.setDefaultPickUpDelay()
+                    level.addFreshEntity(spawned)
+                }
+            }
+
+            craftedAny = true
+        }
+
+        if (craftedAny) {
+            // Visual sparks
             level.sendParticles(
                 ParticleTypes.ELECTRIC_SPARK,
-                itemEntity.x, itemEntity.y + .2, itemEntity.z,
-                50, .75, .75, .75, .3
+                lightning.x, lightning.y + 0.2, lightning.z,
+                50, 0.75, 0.75, 0.75, 0.3
             )
 
+            // Tier-specific sound
             val (sound, pitch) = when (tier) {
                 2 -> SoundEvents.RESPAWN_ANCHOR_CHARGE to 1.0f
                 3 -> SoundEvents.CONDUIT_ACTIVATE to 1.2f
                 else -> SoundEvents.AMETHYST_BLOCK_CHIME to 4.0f
             }
-
-            level.playSound(
-                null,
-                itemEntity.blockPosition(),
-                sound,
-                SoundSource.BLOCKS,
-                50f,
-                pitch
-            )
-
+            level.playSound(null, lightning.blockPosition(), sound, SoundSource.BLOCKS, 50f, pitch)
         }
-
     }
 
     @SubscribeEvent
     fun onEntityStruckByLightning(event: EntityStruckByLightningEvent) {
         val itemEntity = event.entity as? ItemEntity ?: return
-        if (LightningCrafting.hasRecipe(itemEntity.item.item)) {
-            event.isCanceled = true
+        if (LightningCrafting.isIngredient(itemEntity.item.item)) {
+            event.isCanceled = true // Protect recipe ingredients from burning
         }
     }
-
 }

@@ -5,6 +5,8 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.level.block.Blocks
 import net.modelai.website.crafting.LightningCrafting
 import net.modelai.website.crafting.LightningCraftingHandler
+import net.modelai.website.crafting.ingredient
+import net.modelai.website.crafting.output
 import net.modelai.website.item.ModItems
 import net.modelai.website.tab.ModCreativeTabs
 import net.neoforged.bus.api.IEventBus
@@ -48,10 +50,19 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
         LightningCrafting.register(1, Supplier { Items.APPLE }, ModItems.CHANNEL_APPLE)
 
         // Example Tier 2 / Tier 3 recipes can be added here whenever needed:
-        // LightningCrafting.register(2, Supplier { Items.GOLD_INGOT }, Supplier { Items.DIAMOND })
         LightningCrafting.register(2, Supplier { Items.GOLDEN_APPLE }, Supplier { Items.ENCHANTED_GOLDEN_APPLE})
-        // LightningCrafting.register(3, Supplier { Items.NETHER_STAR }, ...)
         LightningCrafting.register(3, Supplier { Items.HEART_OF_THE_SEA }, Supplier { Items.CONDUIT })
+        LightningCrafting.register(
+            tier = 3,
+            inputs = listOf(
+                ingredient(Items.APPLE, count = 1),
+                ingredient(Items.HONEYCOMB, count = 2)
+            ),
+            outputs = listOf(
+                output(Items.GOAT_HORN, count = 2),
+                output(Items.HONEYCOMB, count = 1)
+            )
+        )
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {
