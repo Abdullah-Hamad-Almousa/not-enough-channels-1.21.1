@@ -33,15 +33,19 @@ not-enough-channels-1.21.1/
 │   │   │   ├── NotEnoughChannelsClient.kt     # Client-only setup & screens (@EventBusSubscriber)
 │   │   │   ├── Config.kt                      # ModConfigSpec definition
 │   │   │   ├── crafting/                      # In-world crafting mechanics
-│   │   │   │   ├── LightningCrafting.kt       # Recipe registry (Supplier-based)
+│   │   │   │   ├── LightningCrafting.kt       # Tiered & Multi-Item recipe registry & DSL helpers
 │   │   │   │   └── LightningCraftingHandler.kt# Event bus listener for lightning transformations
 │   │   │   ├── item/                          # Deferred items & custom item classes
-│   │   │   │   ├── ModItems.kt                # Item registry
+│   │   │   │   ├── ModItems.kt                # Item registry (sticks, snowballs, apple, rock)
 │   │   │   │   └── custom/
-│   │   │   │       └── ChannelStickItem.kt    # Custom stick item (lightning summoner)
+│   │   │   │       ├── ChannelStickItem.kt    # Tiered stick item (lightning summoner with tags)
+│   │   │   │       └── ChannelAppleItem.kt    # Custom food item
 │   │   │   └── tab/                           # Creative mode tabs
 │   │   │       └── ModCreativeTabs.kt
 │   │   ├── resources/                         # Assets, data, textures, lang files
+│   │   │   └── assets/notenoughchannels/
+│   │   │       ├── lang/en_us.json
+│   │   │       └── models/item/               # Item JSON models (sticks, apple, snowballs)
 │   │   └── templates/META-INF/
 │   │       └── neoforge.mods.toml             # Mod metadata template processed at build
 └── AGENT.md                                   # This agent reference file
@@ -109,29 +113,18 @@ To test interactions in-game with target mods (like JEI, AE2, Sodium, Pipez, Fun
 
 4. **Asset Directory Hierarchy:**
    - All mod assets (models, textures, blockstates, lang, sounds) MUST live strictly under `src/main/resources/assets/<modid>/` (e.g. `assets/notenoughchannels/models/item/channel_snowball.json`).
-   - Placing directories directly in `resources/` (e.g. `src/main/resources/models/`) causes Minecraft to fail asset discovery and renders items as missing texture cubes (black/magenta).
+   - Placing directories directly in `resources/` causes Minecraft to fail asset discovery and renders items as missing texture cubes (black/magenta).
 
 5. **Item Color Tinting & ARGB Byte Order (Minecraft 1.21.1+):**
    - Client item color handlers (`RegisterColorHandlersEvent.Item`) use **ARGB** format (`0xAARRGGBB`), **NOT** RGBA.
-   - Bits 24–31: **Alpha** (`0xFF` = 100% opaque solid, `0x00` = transparent / completely invisible).
-   - Bits 16–23: **Red**, Bits 8–15: **Green**, Bits 0–7: **Blue**.
-   - If Alpha is 0 (e.g., standard 6-digit RGB `0x38B6FF`), the item renders **completely invisible**.
-   - If Alpha is partial (e.g., `0x772121BB` where Alpha = `0x77`), the item renders **semi-transparent / glassy ("like a mirror")**.
-   - For 100% solid color, put `0xFF` at the start: `0xFF2121BB.toInt()` in Kotlin, or use `net.minecraft.util.FastColor.ARGB.opaque(0x2121BB)` or `FastColor.ARGB.color(255, r, g, b)`.
-   - When an item inherits from a vanilla model like `minecraft:item/snowball` (`minecraft:item/generated`), `layer0` quads have `tintindex = 0`. Thrown projectile entities (`SnowballItem` -> `Snowball`) render the item stack, so tint is automatically applied to both inventory items and thrown projectiles in flight.
+   - Bits 24–31: **Alpha** (`0xFF` = 100% opaque solid, `0x00` = transparent).
+   - For 100% solid color, put `0xFF` at the start: `0xFF2121BB.toInt()` in Kotlin, or use `net.minecraft.util.FastColor.ARGB.opaque(0x2121BB)`.
 
 6. **DeferredItem & Registry Resolution Timing (`Supplier` vs `.get()`):**
    - In NeoForge 1.21.1, `DeferredItem<T>` is a `DeferredHolder` implementing `Supplier<T>`.
    - **Never call `.get()` on a `DeferredItem` inside the `@Mod` class constructor (`init`) or static initializers.** At this phase, the registries are not yet frozen.
    - Calling `.get()` early throws `java.lang.NullPointerException: Trying to access unbound value: ResourceKey[...]`.
-   - Systems like custom recipe registries (`LightningCrafting.register`) must accept `Supplier<out Item>` so that items are resolved lazily at runtime when in-game events occur:
-     ```kotlin
-     fun register(input: Supplier<out Item>, output: Supplier<out Item>)
-     ```
-     Usage:
-     ```kotlin
-     LightningCrafting.register(ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
-     ```
+   - Systems like custom recipe registries (`LightningCrafting.register`) must accept `Supplier<out Item>` so that items are resolved lazily at runtime when in-game events occur.
 
 7. **Custom Lightning Strikes & Visual-Only Behavior:**
    - To prevent lightning from starting fires or destroying terrain, call `lightning.setVisualOnly(true)`.
@@ -139,7 +132,45 @@ To test interactions in-game with target mods (like JEI, AE2, Sodium, Pipez, Fun
    - **Reliable Crafting/Hit Detection:** Listen to `EntityJoinLevelEvent` on `NeoForge.EVENT_BUS` and check `event.entity is LightningBolt`. This triggers consistently for all lightning strikes.
    - **Manual Damage:** If visual-only lightning should still damage living entities, apply damage explicitly using `level.getEntitiesOfClass(...)` and `target.hurt(level.damageSources().lightningBolt(), damage)`.
 
-8. **Preserving Documentation & User Directives:**
+8. **⚡ Tiered & Multi-Item Lightning Crafting System:**
+   - **Architecture:**
+     - `ChannelStickItem(tier: Int)` summons a visual-only lightning bolt tagged with `"channel_tier_$tier"` via vanilla scoreboard tags.
+     - Natural thunderstorm strikes have no tag and automatically default to **Tier 1**.
+     - `LightningCraftingHandler` listens on `EntityJoinLevelEvent` (`event.entity is LightningBolt`), reads the tier tag, and processes all `ItemEntity` within a 6×6×6 bounding box around the bolt.
+   - **Strict Tier Separation:**
+     - Each recipe belongs to a specific tier (1, 2, or 3). A stick ONLY crafts recipes of its exact tier.
+   - **Multi-Item & Count Support (1:1, 1:N, N:1, N:M):**
+     - Supports any combination of inputs and outputs with item stack counts.
+     - Helper functions available in `net.modelai.website.crafting`: `ingredient(item, count = 1)` and `output(item, count = 1)`.
+     - Examples:
+       ```kotlin
+       // 1:1 recipe (defaults to tier 1)
+       LightningCrafting.register(1, ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
+
+       // Multi-input to multi-output with item counts:
+       LightningCrafting.register(
+           tier = 3,
+           inputs = listOf(
+               ingredient(Items.APPLE, count = 1),
+               ingredient(Items.HONEYCOMB, count = 2)
+           ),
+           outputs = listOf(
+               output(Items.GOAT_HORN, count = 1),
+               output(Items.HONEYCOMB, count = 1)
+           )
+       )
+       ```
+   - **Batch Crafting:**
+     - The crafting engine calculates `maxCrafts = min(availableCount / requiredCount)`. Dropping multiple stacks executes multiple crafts in a single strike.
+     - Output items are spawned at the strike coordinates, automatically split into stacks of up to `maxStackSize` (64).
+   - **Built-in Minecraft Sound Profiles:**
+     - **Tier 1 / Natural:** `SoundEvents.AMETHYST_BLOCK_CHIME` (pitch 4.0f)
+     - **Tier 2:** `SoundEvents.RESPAWN_ANCHOR_CHARGE` (pitch 1.0f)
+     - **Tier 3:** `SoundEvents.CONDUIT_ACTIVATE` (pitch 1.2f)
+   - **Ingredient Burn Protection:**
+     - `LightningCraftingHandler.onEntityStruckByLightning` checks `LightningCrafting.isIngredient(item)`. If true, the event is canceled to prevent fire or lightning damage from destroying ingredients.
+
+9. **Preserving Documentation & User Directives:**
    - Maintain comments and existing code structure.
    - The user prefers to make code changes directly with clear instructions or diffs when guided.
 
