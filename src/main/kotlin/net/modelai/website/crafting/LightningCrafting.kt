@@ -5,17 +5,28 @@ import java.util.function.Supplier
 
 object LightningCrafting {
 
-    private val RECIPES = mutableListOf<Pair<Supplier<out Item>, Supplier<out Item>>>()
+    data class Recipe(
+        val tier: Int,
+        val input: Supplier<out Item>,
+        val output: Supplier<out Item>
+    )
 
-    fun register(input: Supplier<out Item>, output: Supplier<out Item>) {
-        RECIPES.add(input to output)
+    private val RECIPES = mutableListOf<Recipe>()
+
+    fun register(tier: Int, input: Supplier<out Item>, output: Supplier<out Item>) {
+        RECIPES.add(Recipe(tier, input, output))
     }
 
-    fun getResult(input: Item): Item? {
-        return RECIPES.firstOrNull { it.first.get() == input }?.second?.get()
+    fun register(input: Supplier<out Item>, output: Supplier<out Item>) {
+        register(1, input, output)
+    }
+
+    fun getResult(input: Item, tier: Int): Item? {
+        return RECIPES.firstOrNull() { it.tier == tier && it.input.get() == input }?.output?.get()
     }
 
     fun hasRecipe(input: Item): Boolean {
-        return RECIPES.any { it.first.get() == input }
+        return RECIPES.any { it.input.get() == input}
     }
+
 }

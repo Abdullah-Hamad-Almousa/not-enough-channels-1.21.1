@@ -44,8 +44,13 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC)
 
         // Register Crafting recipe (no .get()!)
-        LightningCrafting.register(ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
-        LightningCrafting.register(Supplier { Items.APPLE }, ModItems.CHANNEL_APPLE)
+        LightningCrafting.register(1, ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
+        LightningCrafting.register(1, Supplier { Items.APPLE }, ModItems.CHANNEL_APPLE)
+
+        // Example Tier 2 / Tier 3 recipes can be added here whenever needed:
+        // LightningCrafting.register(2, Supplier { Items.GOLD_INGOT }, Supplier { Items.DIAMOND })
+        LightningCrafting.register(2, Supplier { Items.GOLDEN_APPLE }, Supplier { Items.ENCHANTED_GOLDEN_APPLE})
+        // LightningCrafting.register(3, Supplier { Items.NETHER_STAR }, ...)
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {

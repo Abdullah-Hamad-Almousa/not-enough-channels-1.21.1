@@ -15,43 +15,56 @@ import net.neoforged.neoforge.event.entity.EntityStruckByLightningEvent
 object LightningCraftingHandler {
 
     @SubscribeEvent
-    fun onEntityJoinLevel(event: EntityJoinLevelEvent) {
+    fun onEntityJoinLevel( event: EntityJoinLevelEvent ) {
         val level = event.level as? ServerLevel ?: return
         val lightning = event.entity as? LightningBolt ?: return
 
-        // 3-block horizontal and vertical radius around strike
+        val tier = when {
+            lightning.tags.contains("channel_tier_3") -> 3
+            lightning.tags.contains("channel_tier_2") -> 2
+            else -> 1
+        }
+
         val area = AABB.ofSize(lightning.position(), 6.0, 6.0, 6.0)
         val items = level.getEntitiesOfClass(ItemEntity::class.java, area)
 
         for (itemEntity in items) {
-            val currentStack = itemEntity.item
-            val resultItem = LightningCrafting.getResult(currentStack.item) ?: continue
 
-            // Transform item in-place preserving stack count
+            val currentStack = itemEntity.item
+            val resultItem = LightningCrafting.getResult(currentStack.item, tier) ?: continue
+
             itemEntity.item = ItemStack(resultItem, currentStack.count)
 
-            // Visual and audio effects
             level.sendParticles(
                 ParticleTypes.ELECTRIC_SPARK,
-                itemEntity.x, itemEntity.y + 0.2, itemEntity.z,
-                50, 0.75, 0.75, 0.75, 0.3
+                itemEntity.x, itemEntity.y + .2, itemEntity.z,
+                50, .75, .75, .75, .3
             )
+
+            val (sound, pitch) = when (tier) {
+                2 -> SoundEvents.RESPAWN_ANCHOR_CHARGE to 1.0f
+                3 -> SoundEvents.CONDUIT_ACTIVATE to 1.2f
+                else -> SoundEvents.AMETHYST_BLOCK_CHIME to 4.0f
+            }
+
             level.playSound(
                 null,
                 itemEntity.blockPosition(),
-                SoundEvents.AMETHYST_BLOCK_CHIME,
+                sound,
                 SoundSource.BLOCKS,
                 50f,
-                4.0f
+                pitch
             )
+
         }
+
     }
 
     @SubscribeEvent
     fun onEntityStruckByLightning(event: EntityStruckByLightningEvent) {
         val itemEntity = event.entity as? ItemEntity ?: return
         if (LightningCrafting.hasRecipe(itemEntity.item.item)) {
-            event.isCanceled = true // Prevent burning/destruction from natural lightning
+            event.isCanceled = true
         }
     }
 
