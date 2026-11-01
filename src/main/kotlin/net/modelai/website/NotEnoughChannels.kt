@@ -51,6 +51,7 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
         // LightningCrafting.register(2, Supplier { Items.GOLD_INGOT }, Supplier { Items.DIAMOND })
         LightningCrafting.register(2, Supplier { Items.GOLDEN_APPLE }, Supplier { Items.ENCHANTED_GOLDEN_APPLE})
         // LightningCrafting.register(3, Supplier { Items.NETHER_STAR }, ...)
+        LightningCrafting.register(3, Supplier { Items.HEART_OF_THE_SEA }, Supplier { Items.CONDUIT })
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {
