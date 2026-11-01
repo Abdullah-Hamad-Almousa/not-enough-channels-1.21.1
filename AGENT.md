@@ -24,12 +24,23 @@ not-enough-channels-1.21.1/
 ├── build.gradle                               # ModDevGradle, Kotlin & localRuntime configuration
 ├── gradle.properties                          # Project properties & JVM target settings
 ├── libs/                                      # Local runtime test mod JARs (loaded in runClient)
+├── notes/                                     # Planning, design docs, and architecture notes
+│   └── plan/
 ├── src/
 │   ├── main/
 │   │   ├── kotlin/net/modelai/website/        # Mod Kotlin source code
 │   │   │   ├── NotEnoughChannels.kt           # Main mod class (@Mod) & common setup
 │   │   │   ├── NotEnoughChannelsClient.kt     # Client-only setup & screens (@EventBusSubscriber)
-│   │   │   └── Config.kt                      # ModConfigSpec definition
+│   │   │   ├── Config.kt                      # ModConfigSpec definition
+│   │   │   ├── crafting/                      # In-world crafting mechanics
+│   │   │   │   ├── LightningCrafting.kt       # Recipe registry (Supplier-based)
+│   │   │   │   └── LightningCraftingHandler.kt# Event bus listener for lightning transformations
+│   │   │   ├── item/                          # Deferred items & custom item classes
+│   │   │   │   ├── ModItems.kt                # Item registry
+│   │   │   │   └── custom/
+│   │   │   │       └── ChannelStickItem.kt    # Custom stick item (lightning summoner)
+│   │   │   └── tab/                           # Creative mode tabs
+│   │   │       └── ModCreativeTabs.kt
 │   │   ├── resources/                         # Assets, data, textures, lang files
 │   │   └── templates/META-INF/
 │   │       └── neoforge.mods.toml             # Mod metadata template processed at build
@@ -94,7 +105,7 @@ To test interactions in-game with target mods (like JEI, AE2, Sodium, Pipez, Fun
 3. **Event Listeners:**
    - Mod bus events: use `modEventBus.addListener(...)` in `@Mod` class constructors (inject `modEventBus: IEventBus` into the constructor).
    - `@EventBusSubscriber(bus = Bus.MOD)` is deprecated in NeoForge 1.21.1 and marked for removal. `@EventBusSubscriber` is now reserved strictly for game events on `NeoForge.EVENT_BUS`.
-   - Forge / Game events: use `@EventBusSubscriber` or `NeoForge.EVENT_BUS.register(this)`.
+   - Forge / Game events: use `@EventBusSubscriber` or `NeoForge.EVENT_BUS.register(this)` / `NeoForge.EVENT_BUS.register(ListenerObject)`.
 
 4. **Asset Directory Hierarchy:**
    - All mod assets (models, textures, blockstates, lang, sounds) MUST live strictly under `src/main/resources/assets/<modid>/` (e.g. `assets/notenoughchannels/models/item/channel_snowball.json`).
@@ -109,7 +120,26 @@ To test interactions in-game with target mods (like JEI, AE2, Sodium, Pipez, Fun
    - For 100% solid color, put `0xFF` at the start: `0xFF2121BB.toInt()` in Kotlin, or use `net.minecraft.util.FastColor.ARGB.opaque(0x2121BB)` or `FastColor.ARGB.color(255, r, g, b)`.
    - When an item inherits from a vanilla model like `minecraft:item/snowball` (`minecraft:item/generated`), `layer0` quads have `tintindex = 0`. Thrown projectile entities (`SnowballItem` -> `Snowball`) render the item stack, so tint is automatically applied to both inventory items and thrown projectiles in flight.
 
-6. **Preserving Documentation & User Directives:**
+6. **DeferredItem & Registry Resolution Timing (`Supplier` vs `.get()`):**
+   - In NeoForge 1.21.1, `DeferredItem<T>` is a `DeferredHolder` implementing `Supplier<T>`.
+   - **Never call `.get()` on a `DeferredItem` inside the `@Mod` class constructor (`init`) or static initializers.** At this phase, the registries are not yet frozen.
+   - Calling `.get()` early throws `java.lang.NullPointerException: Trying to access unbound value: ResourceKey[...]`.
+   - Systems like custom recipe registries (`LightningCrafting.register`) must accept `Supplier<out Item>` so that items are resolved lazily at runtime when in-game events occur:
+     ```kotlin
+     fun register(input: Supplier<out Item>, output: Supplier<out Item>)
+     ```
+     Usage:
+     ```kotlin
+     LightningCrafting.register(ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
+     ```
+
+7. **Custom Lightning Strikes & Visual-Only Behavior:**
+   - To prevent lightning from starting fires or destroying terrain, call `lightning.setVisualOnly(true)`.
+   - **Gotcha:** Setting `visualOnly = true` causes vanilla `LightningBolt.tick()` to bypass entity damage and **suppress `EntityStruckByLightningEvent`**.
+   - **Reliable Crafting/Hit Detection:** Listen to `EntityJoinLevelEvent` on `NeoForge.EVENT_BUS` and check `event.entity is LightningBolt`. This triggers consistently for all lightning strikes.
+   - **Manual Damage:** If visual-only lightning should still damage living entities, apply damage explicitly using `level.getEntitiesOfClass(...)` and `target.hurt(level.damageSources().lightningBolt(), damage)`.
+
+8. **Preserving Documentation & User Directives:**
    - Maintain comments and existing code structure.
    - The user prefers to make code changes directly with clear instructions or diffs when guided.
 
@@ -160,6 +190,9 @@ All commands should be executed from the project root (`A:\IDE\Intellija\not-eno
 - **`Module was compiled with an incompatible version of Kotlin`:** Occurs if the Kotlin Gradle plugin version is below `2.4.0`. KFF 5.12.0 bundles Kotlin 2.4.0 dependencies.
 - **`Argument type mismatch: actual type is 'Dist', but 'Array<Dist>' was expected`:** Caused by omitting brackets on `@Mod(dist = [Dist.CLIENT])`.
 - **`'enum class Bus : Enum<EventBusSubscriber.Bus!>' is deprecated`:** In NeoForge 1.21.1, the `bus` parameter on `@EventBusSubscriber` is deprecated and marked for removal. Migrate mod bus listeners to `modEventBus.addListener(...)` in constructor instead.
+- **`NullPointerException: Trying to access unbound value: ResourceKey[...]`:** Occurs when `.get()` is called on a `DeferredItem` or `DeferredHolder` during mod constructor (`init`) before registry freeze. Accept `Supplier<out Item>` and evaluate lazily.
+- **`EntityStruckByLightningEvent` not triggering:** Occurs when lightning is marked `lightning.setVisualOnly(true)`. Vanilla suppresses damage and strike events for visual lightning bolts. Use `EntityJoinLevelEvent` instead.
+- **Duplicate Entity Spawning:** Ensure `level.addFreshEntity(entity)` is invoked only once per entity. Invoking it multiple times causes ghost entities and desync warnings.
 - **Item Invisible or Glassy/Mirror-like when using `RegisterColorHandlersEvent`:** Minecraft 1.21+ interprets colors as ARGB (`0xAARRGGBB`). Alpha is the first byte: `0x00` makes items 100% invisible, and values like `0x77` make them translucent. Always prefix solid colors with `0xFF` (e.g. `0xFF2121BB.toInt()` or `FastColor.ARGB.opaque(...)`).
 - **`Caused by: java.net.SocketTimeoutException: Read timed out` during `runClient`:** Originates from `YggdrasilMinecraftSessionService` attempting to fetch skins for the offline dev profile `Dev` from Mojang servers. Completely harmless and can be safely ignored.
 - **Transitive Dependencies for Test Mods:** When dropping test mods like Functional Storage into `libs/`, ensure any required library mods (e.g. Titanium) are also in `libs/` to avoid runtime startup crashes.
