@@ -3,6 +3,8 @@ package net.modelai.website
 import com.mojang.logging.LogUtils
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.level.block.Blocks
+import net.modelai.website.crafting.LightningCrafting
+import net.modelai.website.crafting.LightningCraftingHandler
 import net.modelai.website.item.ModItems
 import net.modelai.website.tab.ModCreativeTabs
 import net.neoforged.bus.api.IEventBus
@@ -33,9 +35,13 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
 
         // Register ourselves for server events
         NeoForge.EVENT_BUS.register(this)
+        NeoForge.EVENT_BUS.register(LightningCraftingHandler)
 
         // Register config
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC)
+
+        // Register Crafting recipe (no .get()!)
+        LightningCrafting.register(ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {

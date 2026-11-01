@@ -40,6 +40,7 @@ class NotEnoughChannelsClient(container: ModContainer) {
         fun registerItemColors(e: RegisterColorHandlersEvent.Item) {
             e.registerColor(ModItems.CHANNEL_SNOWBALL, 0xFF2121BB)
             e.registerColor(ModItems.CHANNEL_ROCK, 0xFF949494)
+            e.registerColor(ModItems.CHANNEL_STICK, 0xFF949494)
         }
     }
 }
