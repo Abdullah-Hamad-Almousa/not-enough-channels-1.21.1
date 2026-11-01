@@ -56,7 +56,6 @@ class ChannelStickItem(properties: Properties) : Item(properties) {
         for (target in targets) {
             target.hurt(level.damageSources().lightningBolt(), 5.0f) // 5.0 = 2.5 hearts
         }
-        level.addFreshEntity(lightning)
     }
 
 }
