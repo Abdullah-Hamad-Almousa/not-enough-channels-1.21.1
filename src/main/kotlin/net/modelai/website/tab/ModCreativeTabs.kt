@@ -26,6 +26,7 @@ object ModCreativeTabs {
                     output.accept(ModItems.CHANNEL_SNOWBALL.get())
                     output.accept(ModItems.CHANNEL_ROCK.get())
                     output.accept(ModItems.CHANNEL_STICK.get())
+                    output.accept (ModItems.CHANNEL_APPLE.get())
                 }
                 .build()
         })

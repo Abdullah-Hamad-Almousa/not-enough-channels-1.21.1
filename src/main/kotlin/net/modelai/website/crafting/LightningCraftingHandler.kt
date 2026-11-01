@@ -34,15 +34,15 @@ object LightningCraftingHandler {
             level.sendParticles(
                 ParticleTypes.ELECTRIC_SPARK,
                 itemEntity.x, itemEntity.y + 0.2, itemEntity.z,
-                25, 0.25, 0.25, 0.25, 0.1
+                50, 0.75, 0.75, 0.75, 0.3
             )
             level.playSound(
                 null,
                 itemEntity.blockPosition(),
                 SoundEvents.AMETHYST_BLOCK_CHIME,
                 SoundSource.BLOCKS,
-                1.5f,
-                1.0f
+                50f,
+                4.0f
             )
         }
     }

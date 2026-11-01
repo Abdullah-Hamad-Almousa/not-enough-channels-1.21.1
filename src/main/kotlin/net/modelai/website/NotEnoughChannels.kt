@@ -16,6 +16,9 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent
 import net.neoforged.neoforge.common.NeoForge
 import net.neoforged.neoforge.event.server.ServerStartingEvent
 import org.slf4j.Logger
+import java.util.function.Supplier
+import net.minecraft.world.item.Items
+import net.modelai.website.item.ModItems.CHANNEL_APPLE
 
 @Mod(NotEnoughChannels.MODID)
 class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
@@ -42,6 +45,7 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
 
         // Register Crafting recipe (no .get()!)
         LightningCrafting.register(ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
+        LightningCrafting.register(Supplier { Items.APPLE }, ModItems.CHANNEL_APPLE)
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {

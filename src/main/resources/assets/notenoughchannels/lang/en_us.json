@@ -3,6 +3,7 @@
   "item.notenoughchannels.channel_snowball": "Channel Snowball",
   "item.notenoughchannels.channel_rock": "Channel Rock",
   "item.notenoughchannels.channel_stick": "Channel Stick",
+  "item.notenoughchannels.channel_apple": "Channel Apple",
 
   "notenoughchannels.configuration.title": "not-enough-channels Configs",
   "notenoughchannels.configuration.section.notenoughchannels.common.toml": "not-enough-channels Configs",
