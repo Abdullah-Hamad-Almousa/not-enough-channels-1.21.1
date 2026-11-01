@@ -41,6 +41,8 @@ class NotEnoughChannelsClient(container: ModContainer) {
             e.registerColor(ModItems.CHANNEL_SNOWBALL, 0xFF2121BB)
             e.registerColor(ModItems.CHANNEL_ROCK, 0xFF949494)
             e.registerColor(ModItems.CHANNEL_STICK, 0xFF949494)
+            e.registerColor(ModItems.CHANNEL_STICK_TIER_2, 0xFF119454)
+            e.registerColor(ModItems.CHANNEL_STICK_TIER_3, 0xFF99BB26)
             e.registerColor(ModItems.CHANNEL_APPLE, 0xFF2551BB)
         }
     }

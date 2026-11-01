@@ -20,7 +20,6 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent
 import org.slf4j.Logger
 import java.util.function.Supplier
 import net.minecraft.world.item.Items
-import net.modelai.website.item.ModItems.CHANNEL_APPLE
 
 @Mod(NotEnoughChannels.MODID)
 class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
