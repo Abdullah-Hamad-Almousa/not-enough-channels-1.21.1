@@ -2,6 +2,7 @@ package net.modelai.website
 
 import com.mojang.logging.LogUtils
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Blocks
 import net.modelai.website.crafting.LightningCrafting
 import net.modelai.website.crafting.LightningCraftingHandler
@@ -20,6 +21,8 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent
 import org.slf4j.Logger
 import java.util.function.Supplier
 import net.minecraft.world.item.Items
+import net.modelai.website.crafting.ingredient
+import net.modelai.website.crafting.output
 
 @Mod(NotEnoughChannels.MODID)
 class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
@@ -44,24 +47,28 @@ class NotEnoughChannels(modEventBus: IEventBus, modContainer: ModContainer) {
         // Register config
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC)
 
-        // Register Crafting recipe (no .get()!)
-        LightningCrafting.register(1, ModItems.CHANNEL_SNOWBALL, ModItems.CHANNEL_ROCK)
         LightningCrafting.register(1, Supplier { Items.APPLE }, ModItems.CHANNEL_APPLE)
-
-        // Example Tier 2 / Tier 3 recipes can be added here whenever needed:
-        LightningCrafting.register(2, Supplier { Items.GOLDEN_APPLE }, Supplier { Items.ENCHANTED_GOLDEN_APPLE})
-        LightningCrafting.register(3, Supplier { Items.HEART_OF_THE_SEA }, Supplier { Items.CONDUIT })
         LightningCrafting.register(
-            tier = 3,
+            tier = 1,
             inputs = listOf(
-                ingredient(Items.APPLE, count = 1),
-                ingredient(Items.HONEYCOMB, count = 2)
+                ingredient(Items.BREEZE_ROD, count = 64)
             ),
             outputs = listOf(
-                output(Items.GOAT_HORN, count = 2),
-                output(Items.HONEYCOMB, count = 1)
+                output(ModItems.CHANNEL_STICK as Supplier<out Item>, count = 1)
             )
         )
+
+//        LightningCrafting.register(
+//            tier = 3,
+//            inputs = listOf(
+//                ingredient(Items.APPLE, count = 1),
+//                ingredient(Items.HONEYCOMB, count = 2)
+//            ),
+//            outputs = listOf(
+//                output(Items.GOAT_HORN, count = 2),
+//                output(Items.HONEYCOMB, count = 1)
+//            )
+//        )
     }
 
     private fun commonSetup(event: FMLCommonSetupEvent) {

@@ -20,15 +20,12 @@ object ModCreativeTabs {
         CREATIVE_MODE_TABS.register("main", Supplier {
             CreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.notenoughchannels"))
-                .withTabsBefore(CreativeModeTabs.COMBAT)
-                .icon(Supplier { ItemStack(ModItems.CHANNEL_SNOWBALL.get()) })
+                .icon(Supplier { ItemStack(ModItems.CHANNEL_STICK.get()) })
                 .displayItems { _, output ->
-                    output.accept(ModItems.CHANNEL_SNOWBALL.get())
-                    output.accept(ModItems.CHANNEL_ROCK.get())
+                    output.accept { ModItems.CHANNEL_APPLE.get() }
                     output.accept(ModItems.CHANNEL_STICK.get())
                     output.accept(ModItems.CHANNEL_STICK_TIER_2.get())
                     output.accept(ModItems.CHANNEL_STICK_TIER_3.get())
-                    output.accept(ModItems.CHANNEL_APPLE.get())
                 }
                 .build()
         })
