@@ -19,11 +19,10 @@ object LightningCraftingHandler {
         val level = event.level as? ServerLevel ?: return
         val lightning = event.entity as? LightningBolt ?: return
 
-        // Tier detection from lightning tags
         val tier = when {
             lightning.tags.contains("channel_tier_3") -> 3
             lightning.tags.contains("channel_tier_2") -> 2
-            else -> 1 // Tier 1 for "channel_tier_1" or natural lightning
+            else -> 1
         }
 
         val area = AABB.ofSize(lightning.position(), 6.0, 6.0, 6.0)
@@ -33,7 +32,6 @@ object LightningCraftingHandler {
         var craftedAny = false
 
         for (recipe in LightningCrafting.getRecipesForTier(tier)) {
-            // Count available items in the area for this recipe
             val available = mutableMapOf<net.minecraft.world.item.Item, Int>()
             for (entity in itemEntities) {
                 if (entity.isRemoved || entity.item.isEmpty) continue
@@ -41,7 +39,6 @@ object LightningCraftingHandler {
                 available[item] = (available[item] ?: 0) + entity.item.count
             }
 
-            // Calculate how many times this recipe can craft
             var maxCrafts = Int.MAX_VALUE
             for (input in recipe.inputs) {
                 val reqItem = input.item.get()
@@ -54,7 +51,6 @@ object LightningCraftingHandler {
 
             if (maxCrafts <= 0) continue
 
-            // Consume required ingredients from item entities
             for (input in recipe.inputs) {
                 val reqItem = input.item.get()
                 var remainingToDeduct = input.count * maxCrafts
@@ -76,7 +72,6 @@ object LightningCraftingHandler {
                 }
             }
 
-            // Spawn output items
             val strikePos = lightning.position()
             for (output in recipe.outputs) {
                 val outItem = output.item.get()
@@ -96,14 +91,12 @@ object LightningCraftingHandler {
         }
 
         if (craftedAny) {
-            // Visual sparks
             level.sendParticles(
                 ParticleTypes.ELECTRIC_SPARK,
                 lightning.x, lightning.y + 0.2, lightning.z,
                 50, 0.75, 0.75, 0.75, 0.3
             )
 
-            // Tier-specific sound
             val (sound, pitch) = when (tier) {
                 2 -> SoundEvents.RESPAWN_ANCHOR_CHARGE to 1.0f
                 3 -> SoundEvents.CONDUIT_ACTIVATE to 1.2f

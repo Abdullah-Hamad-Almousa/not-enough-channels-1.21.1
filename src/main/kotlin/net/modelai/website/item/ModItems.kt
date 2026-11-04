@@ -1,9 +1,11 @@
 package net.modelai.website.item
 
 import java.util.function.Supplier
+import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.SnowballItem
 import net.modelai.website.NotEnoughChannels
+import net.modelai.website.block.ModBlocks
 import net.modelai.website.item.custom.ChannelAppleItem
 import net.modelai.website.item.custom.ChannelStickItem
 import net.neoforged.bus.api.IEventBus
@@ -33,6 +35,16 @@ object ModItems {
                         .build()
                 )
             )
+        })
+
+    val SOLAR_MULTIBLOCK_MACHINE_ITEM: DeferredItem<BlockItem> =
+        ITEMS.register("solar_multiblock_machine", Supplier {
+            BlockItem(ModBlocks.SOLAR_MULTIBLOCK_MACHINE.get(), Item.Properties())
+        })
+
+    val SIDE_STRUCTURE_BLOCK_ITEM: DeferredItem<BlockItem> =
+        ITEMS.register("side_structure_block", Supplier {
+            BlockItem(ModBlocks.SIDE_STRUCTURE_BLOCK.get(), Item.Properties())
         })
 
     fun register(bus: IEventBus) {

@@ -31,9 +31,6 @@ object LightningCrafting {
 
     private val RECIPES = mutableListOf<Recipe>()
 
-    /**
-     * Multiple inputs with count to multiple outputs with count
-     */
     fun register(
         tier: Int,
         inputs: List<CraftingItem>,
@@ -43,9 +40,6 @@ object LightningCrafting {
         RECIPES.sortByDescending { it.inputs.size }
     }
 
-    /**
-     * Overload for raw Suppliers (count defaults to 1)
-     */
     @JvmName("registerSuppliers")
     fun register(
         tier: Int,
@@ -59,9 +53,6 @@ object LightningCrafting {
         )
     }
 
-    /**
-     * Multiple inputs to single output
-     */
     fun register(
         tier: Int,
         inputs: List<Supplier<out Item>>,
@@ -70,9 +61,6 @@ object LightningCrafting {
         register(tier, inputs, listOf(output))
     }
 
-    /**
-     * Single input to single output with tier
-     */
     fun register(
         tier: Int = 1,
         input: Supplier<out Item>,
@@ -81,9 +69,6 @@ object LightningCrafting {
         register(tier, listOf(input), listOf(output))
     }
 
-    /**
-     * Backwards-compatible single input to single output (defaults to Tier 1)
-     */
     fun register(
         input: Supplier<out Item>,
         output: Supplier<out Item>
@@ -91,7 +76,7 @@ object LightningCrafting {
         register(1, listOf(input), listOf(output))
     }
 
-    // Helper functions on the object itself as well
+    // Helper functions on the object
     fun ingredient(item: ItemLike, count: Int = 1): CraftingItem = net.modelai.website.crafting.ingredient(item, count)
     fun ingredient(supplier: Supplier<out Item>, count: Int = 1): CraftingItem = net.modelai.website.crafting.ingredient(supplier, count)
     fun output(item: ItemLike, count: Int = 1): CraftingItem = net.modelai.website.crafting.output(item, count)

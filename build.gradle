@@ -33,6 +33,17 @@ repositories {
         name = 'Kotlin for Forge'
         url = 'https://thedarkcolour.github.io/KotlinForForge/'
     }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'BlameJared'
+        url = 'https://maven.blamejared.com/'
+    }
 }
 
 base {
@@ -127,8 +138,12 @@ configurations {
 dependencies {
     implementation 'thedarkcolour:kotlinforforge-neoforge:5.12.0'
 
-    // Load any mods locally
-    localRuntime fileTree(dir: 'libs', include: ['*.jar'])
+    // Compile & runtime libraries for the multiblock solar machine
+    implementation files('libs/titanium-1.21-4.0.43.jar')
+    implementation 'curse.maven:lodestone-616457:7264731'
+
+    // Load remaining test mods locally (excluding titanium to avoid duplicate classpath entries)
+    localRuntime fileTree(dir: 'libs', include: ['*.jar'], exclude: ['titanium-*.jar'])
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

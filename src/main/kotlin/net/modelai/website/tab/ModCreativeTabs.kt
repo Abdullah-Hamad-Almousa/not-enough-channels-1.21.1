@@ -26,6 +26,8 @@ object ModCreativeTabs {
                     output.accept(ModItems.CHANNEL_STICK.get())
                     output.accept(ModItems.CHANNEL_STICK_TIER_2.get())
                     output.accept(ModItems.CHANNEL_STICK_TIER_3.get())
+                    output.accept(ModItems.SOLAR_MULTIBLOCK_MACHINE_ITEM.get())
+                    output.accept(ModItems.SIDE_STRUCTURE_BLOCK_ITEM.get())
                 }
                 .build()
         })
